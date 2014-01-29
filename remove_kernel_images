@@ -1,0 +1,46 @@
+#!/bin/bash
+THISSCRIPT=$(basename "$0")
+TEMPFILE=$(mktemp --tmpdir "${THISSCRIPT}.XXXXXXXXXX")
+#echo 'TEMPFILE: '"$TEMPFILE"
+
+THISKERNEL=$(uname -r)
+ls -1 /boot/ | grep '^vmlinuz-' | sed 's/^vmlinuz-//' | grep -v "${THISKERNEL}" > "$TEMPFILE"
+
+PACKAGES=''
+for VERSION in $(cat $TEMPFILE)
+do
+  PACKAGES="${PACKAGES} linux-image-${VERSION} linux-headers-${VERSION}"
+done
+PACKAGES="$(echo $PACKAGES | sed 's/^ //')"
+
+echo 'Currently used space on /boot:'
+df -h /boot | head -n2 | tail -n1 | awk '{print "  "$3" of "$2" ("$4" available)"}'
+echo ''
+echo 'Kernel images to keep (currently running kernel):'
+echo '  '"${THISKERNEL}"
+echo ''
+if [[ $PACKAGES = '' ]]
+then
+  echo 'No packages can be removed.'
+  rm -f "$TEMPFILE"
+  exit
+fi
+echo 'Kernel images to be removed:'
+for VERSION in $(cat $TEMPFILE)
+do
+  echo '  '"$VERSION"
+done
+rm -f "$TEMPFILE"
+echo ''
+echo 'Please press ENTER to run these commands (Ctrl-C to cancel):'
+echo '  sudo apt-get -y --purge remove '"$PACKAGES"
+echo '  sudo apt-get -y --purge autoremove'
+read LINE
+echo '---------------------------------------------------------------------------------'
+sudo apt-get -y --purge remove $PACKAGES
+sudo apt-get -y --purge autoremove
+echo '---------------------------------------------------------------------------------'
+
+echo ''
+echo 'Currently used space on /boot:'
+df -h /boot | head -n2 | tail -n1 | awk '{print "  "$3" of "$2" ("$4" available)"}'
