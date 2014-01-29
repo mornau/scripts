@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Licensed under GPL 3.0, see LICENSE
+# Copyright 2014 Moritz Naumann
+
 THISSCRIPT=$(basename "$0")
 TEMPFILE=$(mktemp --tmpdir "${THISSCRIPT}.XXXXXXXXXX")
 #echo 'TEMPFILE: '"$TEMPFILE"
